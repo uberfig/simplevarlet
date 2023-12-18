@@ -1,7 +1,8 @@
+use std::time::Duration;
+
 use bevy::{
-    core_pipeline::clear_color::ClearColorConfig,
     prelude::*,
-    render::{camera::ScalingMode, texture},
+    render::{camera::ScalingMode},
 };
 
 #[derive(Component)]
@@ -14,8 +15,16 @@ pub struct Money(pub f32);
 
 #[derive(Component)]
 pub struct PhysicsItem {
-    pub velocity: f32,
-    pub mass: f32,
+    pub velocity: Vec2, //in m/s
+    pub mass: f32, //in kg
+}
+
+impl PhysicsItem {
+    pub fn tick(&mut self, delta: Duration) -> &Self {
+        
+
+        return self;
+    }
 }
 
 #[derive(Component)]
@@ -85,18 +94,23 @@ fn character_movement(
     for (mut transform, player) in &mut characters {
         let movement_amount = player.speed * time.delta_seconds();
 
+        let mut direction_vector = Vec2::new(0.0, 0.0);
+
         if input.pressed(KeyCode::W) {
-            transform.translation.y += movement_amount;
+            direction_vector.y += 1.0;
         }
         if input.pressed(KeyCode::S) {
-            transform.translation.y -= movement_amount;
+            direction_vector.y -= 1.0;
         }
         if input.pressed(KeyCode::D) {
-            transform.translation.x += movement_amount;
+            direction_vector.x += 1.0;
         }
         if input.pressed(KeyCode::A) {
-            transform.translation.x -= movement_amount;
+            direction_vector.x -= 1.0;
         }
+        let dirvec = direction_vector.normalize_or_zero();
+        transform.translation.x += dirvec.x * movement_amount;
+        transform.translation.y += dirvec.y * movement_amount;
     }
 }
 
