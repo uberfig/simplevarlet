@@ -2,10 +2,12 @@ use std::time::Duration;
 
 use bevy::{
     prelude::*,
-    render::{camera::ScalingMode},
+    render::{camera::ScalingMode, texture}, input::common_conditions::input_toggle_active,
 };
+use bevy_inspector_egui::quick::WorldInspectorPlugin;
 
-#[derive(Component)]
+#[derive(Component, Default, Reflect)]
+#[reflect(Component)]
 pub struct Player {
     pub speed: f32,
 }
@@ -27,7 +29,8 @@ impl PhysicsItem {
     }
 }
 
-#[derive(Component)]
+#[derive(Component, Default, Reflect)]
+#[reflect(Component)]
 pub struct Newme {
     pub lifetime: Timer,
 }
@@ -46,6 +49,9 @@ fn main() {
                     }),
                     ..default()
                 }),
+        )
+        .add_plugins(
+            WorldInspectorPlugin::default().run_if(input_toggle_active(true, KeyCode::Escape)),
         )
         .insert_resource(Money(100.0))
         .add_systems(Startup, setup) //run setup at the start of the program
@@ -83,6 +89,7 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
             ..default()
         },
         Player { speed: 100.0 },
+        Name::new("Player"),
     ));
 }
 
@@ -148,7 +155,8 @@ fn spawn_thing(
         },
         Newme {
             lifetime: Timer::from_seconds(2.0, TimerMode::Once),
-        }
+        },
+        Name::new("Newme"),
     ));
 }
 

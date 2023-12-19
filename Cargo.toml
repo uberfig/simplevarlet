@@ -8,8 +8,10 @@ edition = "2021"
 [dependencies]
 bevy = { version = "0.12.1", features = ["dynamic_linking"] }
 bevy_rapier2d = "*"
+bevy-inspector-egui = "0.21.0"
 rand = "0.8.5"
 #get rid of dynamic lincing when building to export
+# bevy-inspector-egui = "0.19"
 
 # Enable a small amount of optimization in debug mode
 [profile.dev]
