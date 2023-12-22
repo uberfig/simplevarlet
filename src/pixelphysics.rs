@@ -1,7 +1,7 @@
-use bevy::prelude::*;
+use bevy::{prelude::*, sprite::MaterialMesh2dBundle};
 use std::time::Duration;
 
-use crate::{Player, newme::Newme};
+use crate::Player;
 
 
 pub struct PixelPhysics;
@@ -10,6 +10,7 @@ impl Plugin for PixelPhysics {
     fn build(&self, app: &mut App) {
         app
             .add_systems(Update, (physics_tick, spawn_object))
+            .add_systems(Startup, setup)
             .register_type::<PhysicsItem>();
     }
 }
@@ -49,33 +50,46 @@ impl PhysicsItem {
 }
 
 fn apply_constraints(
-    mut commands: Commands,
     mut items: Query<(&mut Transform, &mut PhysicsItem)>,
 ) {
     let container_pos = Vec2 {x: 0.0, y: 0.0};
-    let radius: f32 = 400.0;
+    let radius: f32 = 100.0;
+    let obj_rad: f32 = 10.0;
     for (mut transform, mut physobj) in &mut items {
         let to_obj = physobj.position - container_pos;
         let dist = to_obj.length();
-        if (dist > radius - 50.0) {
+
+        if (dist > radius - obj_rad) {
+            
             let n = to_obj / dist;
-            physobj.position = container_pos + n * (dist - 50.0);
+            let newpos = container_pos + n * (dist - obj_rad);
+            physobj.position = newpos;
+            info!("outisde of radius pos with newpos {:?}", newpos);
         }
     }
 }
 
-fn physics_tick(
-    mut commands: Commands,
+fn update_postions(
     time: Res<Time>,
     mut items: Query<(&mut Transform, &mut PhysicsItem)>,
 ) {
     for (mut transform, mut physobj) in &mut items {
-        physobj.accelerate(Vec2 { x: 0.0, y: -9.8 * time.delta().as_secs_f32() * 100.0 });
         physobj.tick(time.delta());
         let z = transform.translation.z;
         transform.translation = Vec3 {x: physobj.position.x, y: physobj.position.y, z: z };
     }
-    apply_constraints(commands, items);
+}
+
+fn physics_tick(
+    time: Res<Time>,
+    mut items: Query<(&mut Transform, &mut PhysicsItem)>,
+    mut items2: Query<(&mut Transform, &mut PhysicsItem)>,
+) {
+    for (mut transform, mut physobj) in &mut items {
+        physobj.accelerate(Vec2 { x: 0.0, y: -9.8 * time.delta().as_secs_f32() * 100.0 });
+    }
+    apply_constraints(items);
+    update_postions(time, items2);
 }
 
 fn spawn_object(
@@ -104,4 +118,73 @@ fn spawn_object(
         PhysicsItem::new(player_transform.translation.xy()),
         Name::new("PhysItem"),
     ));
+}
+
+fn setup(mut commands: Commands, mut meshes: ResMut<Assets<Mesh>>, mut materials: ResMut<Assets<ColorMaterial>>, asset_server: Res<AssetServer>) {
+    let texture = asset_server.load("textures/newme.png");
+
+    commands.spawn((
+        SpriteBundle {
+            sprite: Sprite {
+                custom_size: Some(Vec2::new(4.0, 4.0)),
+                ..default()
+            },
+            texture,
+            transform: Transform {
+                translation: Vec3 { x: 10.0, y: 0.0, z: 0.0},
+                ..default()
+            },
+            ..default()
+        },
+        Name::new("helper"),
+    ));
+    commands.spawn((
+        SpriteBundle {
+            sprite: Sprite {
+                custom_size: Some(Vec2::new(4.0, 4.0)),
+                ..default()
+            },
+            transform: Transform {
+                translation: Vec3 { x: -10.0, y: 0.0, z: 0.0},
+                ..default()
+            },
+            ..default()
+        },
+        Name::new("helper"),
+    ));
+    commands.spawn((
+        SpriteBundle {
+            sprite: Sprite {
+                custom_size: Some(Vec2::new(4.0, 4.0)),
+                ..default()
+            },
+            transform: Transform {
+                translation: Vec3 { x: 0.0, y: -10.0, z: 0.0},
+                ..default()
+            },
+            ..default()
+        },
+        Name::new("helper"),
+    ));
+    commands.spawn((
+        SpriteBundle {
+            sprite: Sprite {
+                custom_size: Some(Vec2::new(4.0, 4.0)),
+                ..default()
+            },
+            transform: Transform {
+                translation: Vec3 { x: 0.0, y: 10.0, z: 0.0},
+                ..default()
+            },
+            ..default()
+        },
+        Name::new("helper"),
+    ));
+
+    commands.spawn(MaterialMesh2dBundle {
+        mesh: meshes.add(shape::Circle::new(50.).into()).into(),
+        material: materials.add(ColorMaterial::from(Color::PURPLE)),
+        transform: Transform::from_translation(Vec3::new(0., 0., -0.5)),
+        ..default()
+    });
 }

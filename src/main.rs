@@ -1,11 +1,10 @@
-use std::time::Duration;
 
 mod newme;
 mod pixelphysics;
 
 use bevy::{
     prelude::*,
-    render::{camera::ScalingMode, texture}, input::common_conditions::input_toggle_active,
+    render::camera::ScalingMode, input::common_conditions::input_toggle_active,
 };
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use newme::NewMePlugin;
@@ -19,9 +18,6 @@ pub struct Player {
 
 #[derive(Resource)]
 pub struct Money(pub f32);
-
-
-
 
 
 fn main() {
