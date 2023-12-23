@@ -50,16 +50,16 @@ impl PhysicsItem {
 }
 
 fn apply_constraints(
-    mut items: Query<(&mut Transform, &mut PhysicsItem)>,
+    mut items: Query<(&mut PhysicsItem, &mut Transform)>,
 ) {
     let container_pos = Vec2 {x: 0.0, y: 0.0};
-    let radius: f32 = 100.0;
+    let radius: f32 = 50.0;
     let obj_rad: f32 = 10.0;
-    for (mut transform, mut physobj) in &mut items {
+    for (mut physobj, mut transform) in &mut items {
         let to_obj = physobj.position - container_pos;
         let dist = to_obj.length();
 
-        if (dist > radius - obj_rad) {
+        if dist > (radius - obj_rad) {
             
             let n = to_obj / dist;
             let newpos = container_pos + n * (dist - obj_rad);
@@ -71,9 +71,9 @@ fn apply_constraints(
 
 fn update_postions(
     time: Res<Time>,
-    mut items: Query<(&mut Transform, &mut PhysicsItem)>,
+    mut items: Query<(&mut PhysicsItem, &mut Transform)>,
 ) {
-    for (mut transform, mut physobj) in &mut items {
+    for (mut physobj, mut transform) in &mut items {
         physobj.tick(time.delta());
         let z = transform.translation.z;
         transform.translation = Vec3 {x: physobj.position.x, y: physobj.position.y, z: z };
@@ -82,14 +82,18 @@ fn update_postions(
 
 fn physics_tick(
     time: Res<Time>,
-    mut items: Query<(&mut Transform, &mut PhysicsItem)>,
-    mut items2: Query<(&mut Transform, &mut PhysicsItem)>,
+    mut set: ParamSet<(
+        Query<(&mut PhysicsItem, &mut Transform)>,
+        Query<(&mut PhysicsItem, &mut Transform)>,
+        Query<(&mut PhysicsItem, &mut Transform)>,
+    )>,
+    // mut items2: Query<(&mut Transform, &mut PhysicsItem)>,
 ) {
-    for (mut transform, mut physobj) in &mut items {
-        physobj.accelerate(Vec2 { x: 0.0, y: -9.8 * time.delta().as_secs_f32() * 100.0 });
+    for (mut physobj, mut transform) in &mut set.p0() {
+        physobj.accelerate(Vec2 { x: 0.0, y: -9.8 * time.delta().as_secs_f32() * time.delta().as_secs_f32() });
     }
-    apply_constraints(items);
-    update_postions(time, items2);
+    apply_constraints(set.p1());
+    update_postions(time, set.p2());
 }
 
 fn spawn_object(
@@ -121,7 +125,6 @@ fn spawn_object(
 }
 
 fn setup(mut commands: Commands, mut meshes: ResMut<Assets<Mesh>>, mut materials: ResMut<Assets<ColorMaterial>>, asset_server: Res<AssetServer>) {
-    let texture = asset_server.load("textures/newme.png");
 
     commands.spawn((
         SpriteBundle {
@@ -129,7 +132,6 @@ fn setup(mut commands: Commands, mut meshes: ResMut<Assets<Mesh>>, mut materials
                 custom_size: Some(Vec2::new(4.0, 4.0)),
                 ..default()
             },
-            texture,
             transform: Transform {
                 translation: Vec3 { x: 10.0, y: 0.0, z: 0.0},
                 ..default()
@@ -183,7 +185,7 @@ fn setup(mut commands: Commands, mut meshes: ResMut<Assets<Mesh>>, mut materials
 
     commands.spawn(MaterialMesh2dBundle {
         mesh: meshes.add(shape::Circle::new(50.).into()).into(),
-        material: materials.add(ColorMaterial::from(Color::PURPLE)),
+        material: materials.add(ColorMaterial::from(Color::GRAY)),
         transform: Transform::from_translation(Vec3::new(0., 0., -0.5)),
         ..default()
     });
