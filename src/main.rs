@@ -56,7 +56,7 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     let mut camera = Camera2dBundle {
         camera_2d: Camera2d {
             // clear_color: ClearColorConfig::Custom(Color::rgb(227., 125., 193.)),
-            clear_color: ClearColorConfig::Custom(Color::hsl(320.0, 0.45, 0.89)),
+            clear_color: ClearColorConfig::Custom(Color::hsl(320.0, 0.16, 0.89)),
             ..default()
         },
         ..default()
