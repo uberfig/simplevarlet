@@ -4,7 +4,7 @@ mod pixelphysics;
 
 use bevy::{
     prelude::*,
-    render::camera::ScalingMode, input::common_conditions::input_toggle_active,
+    render::camera::ScalingMode, input::common_conditions::input_toggle_active, core_pipeline::clear_color::ClearColorConfig,
 };
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use newme::NewMePlugin;
@@ -24,7 +24,7 @@ fn main() {
     App::new()
         .add_plugins(
             DefaultPlugins
-                .set(ImagePlugin::default_nearest()) //nearest neighbor filtering by default for pixelart
+                // .set(ImagePlugin::default_nearest()) //nearest neighbor filtering by default for pixelart
                 .set(WindowPlugin {
                     primary_window: Some(Window {
                         title: "Ivy's secret project".into(),
@@ -36,7 +36,7 @@ fn main() {
                 }),
         )
         .add_plugins(
-            WorldInspectorPlugin::default().run_if(input_toggle_active(true, KeyCode::Escape)),
+            WorldInspectorPlugin::default().run_if(input_toggle_active(false, KeyCode::Escape)),
         )
         .insert_resource(Money(100.0))
         .add_systems(Startup, setup) //run setup at the start of the program
@@ -53,7 +53,14 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     //         ..default() //takes the rest of the default props
     //     }
     // );
-    let mut camera = Camera2dBundle::default();
+    let mut camera = Camera2dBundle {
+        camera_2d: Camera2d {
+            // clear_color: ClearColorConfig::Custom(Color::rgb(227., 125., 193.)),
+            clear_color: ClearColorConfig::Custom(Color::hsl(320.0, 0.45, 0.89)),
+            ..default()
+        },
+        ..default()
+    };
 
     camera.projection.scaling_mode = ScalingMode::AutoMin {
         // min_width: 256.0,
@@ -71,7 +78,7 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands.spawn((
         SpriteBundle {
             sprite: Sprite {
-                custom_size: Some(Vec2::new(20.0, 20.0)),
+                custom_size: Some(Vec2::new(80.0, 80.0)),
                 ..default()
             },
             texture,

@@ -69,7 +69,7 @@ impl PhysicsItem {
 
 fn apply_constraints(mut items: Query<&mut PhysicsItem>) {
     let container_pos = Vec2 { x: 0.0, y: 0.0 };
-    let radius: f32 = 100.0;
+    let radius: f32 = 150.0;
     // let obj_rad: f32 = 10.0;
     for mut physobj in &mut items {
         let to_obj = physobj.position - container_pos;
@@ -205,7 +205,7 @@ fn setup(
     // asset_server: Res<AssetServer>,
 ) {
     commands.spawn(MaterialMesh2dBundle {
-        mesh: meshes.add(shape::Circle::new(100.).into()).into(),
+        mesh: meshes.add(shape::Circle::new(150.).into()).into(),
         material: materials.add(ColorMaterial::from(Color::GRAY)),
         transform: Transform::from_translation(Vec3::new(0., 0., -0.5)),
         ..default()
@@ -216,7 +216,7 @@ fn setup(
             timer: Timer::from_seconds(0.04, TimerMode::Once),
             step: 1,
             count: 0,
-            max: 800,
+            max: 400,
         },
         Name::new("Spawner"),
     ));
@@ -258,7 +258,7 @@ fn run_spawns(
                 spawner.step = 1
             }
 
-            let radius: f32 = 1.2 * (spawner.step % 4) as f32;
+            let radius: f32 = 1.4 * (spawner.step % 4) as f32 + 3.0;
 
             let _obj =
             commands.spawn((
