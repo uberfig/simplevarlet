@@ -28,7 +28,7 @@ fn main() {
                 .set(WindowPlugin {
                     primary_window: Some(Window {
                         title: "Ivy's secret project".into(),
-                        resolution: (640.0, 480.0).into(),
+                        resolution: (900.0, 506.0).into(),
                         resizable: true,
                         ..default()
                     }),
@@ -66,7 +66,7 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
         // min_width: 256.0,
         // min_height: 144.0,
         min_width: 512.0,
-        min_height: 288.0,
+        min_height: 350.0,
     };
 
     commands.spawn(camera);
