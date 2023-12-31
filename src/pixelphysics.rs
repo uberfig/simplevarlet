@@ -1,4 +1,6 @@
 use bevy::{prelude::*, sprite::MaterialMesh2dBundle};
+use bevy_rapier2d::na::DimName;
+// use bevy_rapier2d::na::U4;
 // use std::time::Duration;
 
 use crate::Player;
@@ -8,14 +10,18 @@ pub struct PixelPhysics;
 impl Plugin for PixelPhysics {
     fn build(&self, app: &mut App) {
         app.insert_resource(PhysId(0))
-            .add_systems(Update, (physics_tick, spawn_object))
+            .add_systems(Update, (physics_tick, spawn_object, run_spawns))
             .add_systems(Startup, setup)
-            .register_type::<PhysicsItem>();
+            .register_type::<PhysicsItem>()
+			.register_type::<ItemSpawner>();
     }
 }
 
 #[derive(Resource)]
 pub struct PhysId(pub usize);
+
+// #[derive(Resource)]
+// pub struct PhysList(pub Vec<>);
 
 #[derive(Component, Default, Reflect)]
 #[reflect(Component)]
@@ -47,7 +53,7 @@ impl PhysicsItem {
     // 	return self.id;
     // }
 
-    pub fn new(position: Vec2, mut id: ResMut<PhysId>) -> Self {
+    pub fn new(position: Vec2, id: &mut ResMut<PhysId>, radius: f32) -> Self {
         id.0 = id.0 + 1;
         Self {
             position_old: position,
@@ -56,14 +62,14 @@ impl PhysicsItem {
             acceleration: Vec2 { x: 0.0, y: 0.0 },
             mass: 0.0,
             id: id.0 - 1,
-            radius: 10.0,
+            radius: radius,
         }
     }
 }
 
 fn apply_constraints(mut items: Query<&mut PhysicsItem>) {
     let container_pos = Vec2 { x: 0.0, y: 0.0 };
-    let radius: f32 = 50.0;
+    let radius: f32 = 100.0;
     // let obj_rad: f32 = 10.0;
     for mut physobj in &mut items {
         let to_obj = physobj.position - container_pos;
@@ -137,7 +143,7 @@ fn physics_tick(
 ) {
     let delta = time.delta().as_secs_f32();
 
-    let substeps: usize = 2;
+    let substeps: usize = 4;
     let dt = delta / substeps as f32;
 
     for _ in 0..substeps {
@@ -157,7 +163,7 @@ fn spawn_object(
     mut materials: ResMut<Assets<ColorMaterial>>,
     input: Res<Input<KeyCode>>,
     player: Query<&Transform, With<Player>>,
-    id: ResMut<PhysId>,
+    mut id: ResMut<PhysId>,
 ) {
     if !input.just_pressed(KeyCode::Space) {
         return;
@@ -187,7 +193,7 @@ fn spawn_object(
             transform: *player_transform,
             ..default()
         },
-        PhysicsItem::new(player_transform.translation.xy(), id),
+        PhysicsItem::new(player_transform.translation.xy(), &mut id, 10.0),
         Name::new("PhysItem"),
     ));
 }
@@ -198,83 +204,80 @@ fn setup(
     mut materials: ResMut<Assets<ColorMaterial>>,
     // asset_server: Res<AssetServer>,
 ) {
-    commands.spawn((
-        SpriteBundle {
-            sprite: Sprite {
-                custom_size: Some(Vec2::new(4.0, 4.0)),
-                ..default()
-            },
-            transform: Transform {
-                translation: Vec3 {
-                    x: 10.0,
-                    y: 0.0,
-                    z: 0.0,
-                },
-                ..default()
-            },
-            ..default()
-        },
-        Name::new("helper"),
-    ));
-    commands.spawn((
-        SpriteBundle {
-            sprite: Sprite {
-                custom_size: Some(Vec2::new(4.0, 4.0)),
-                ..default()
-            },
-            transform: Transform {
-                translation: Vec3 {
-                    x: -10.0,
-                    y: 0.0,
-                    z: 0.0,
-                },
-                ..default()
-            },
-            ..default()
-        },
-        Name::new("helper"),
-    ));
-    commands.spawn((
-        SpriteBundle {
-            sprite: Sprite {
-                custom_size: Some(Vec2::new(4.0, 4.0)),
-                ..default()
-            },
-            transform: Transform {
-                translation: Vec3 {
-                    x: 0.0,
-                    y: -10.0,
-                    z: 0.0,
-                },
-                ..default()
-            },
-            ..default()
-        },
-        Name::new("helper"),
-    ));
-    commands.spawn((
-        SpriteBundle {
-            sprite: Sprite {
-                custom_size: Some(Vec2::new(4.0, 4.0)),
-                ..default()
-            },
-            transform: Transform {
-                translation: Vec3 {
-                    x: 0.0,
-                    y: 10.0,
-                    z: 0.0,
-                },
-                ..default()
-            },
-            ..default()
-        },
-        Name::new("helper"),
-    ));
-
     commands.spawn(MaterialMesh2dBundle {
-        mesh: meshes.add(shape::Circle::new(50.).into()).into(),
+        mesh: meshes.add(shape::Circle::new(100.).into()).into(),
         material: materials.add(ColorMaterial::from(Color::GRAY)),
         transform: Transform::from_translation(Vec3::new(0., 0., -0.5)),
         ..default()
     });
+    commands.spawn((
+        ItemSpawner {
+            postion: Vec2 { x: 0.1, y: 90.0 },
+            timer: Timer::from_seconds(0.04, TimerMode::Once),
+            step: 1,
+            count: 0,
+            max: 800,
+        },
+        Name::new("Spawner"),
+    ));
+}
+
+#[derive(Component, Default, Reflect)]
+#[reflect(Component)]
+pub struct ItemSpawner {
+    postion: Vec2,
+    timer: Timer,
+    step: u16,
+    count: usize,
+    max: usize,
+}
+
+fn run_spawns(
+    mut commands: Commands,
+    time: Res<Time>,
+    mut items: Query<&mut ItemSpawner>,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<ColorMaterial>>,
+    mut id: ResMut<PhysId>,
+) {
+    for mut spawner in &mut items {
+		spawner.timer.tick(time.delta());
+        if spawner.count >= spawner.max {
+            continue;
+        }
+        
+
+        if spawner.timer.finished() {
+			spawner.count += 1;
+			spawner.timer.reset();
+            // info!("time finished");
+            let wrap = 512;
+            spawner.step = spawner.step + 1;
+
+            if spawner.step == wrap {
+                spawner.step = 1
+            }
+
+            let radius: f32 = 1.2 * (spawner.step % 4) as f32;
+
+            let _obj =
+            commands.spawn((
+                MaterialMesh2dBundle {
+                    mesh: meshes.add(shape::Circle::new(radius).into()).into(),
+                    material: materials.add(ColorMaterial::from(Color::hsl((spawner.step % 360) as f32, 70.0, 66.0))),
+                    transform: Transform {
+                        translation: Vec3 {
+                            x: spawner.postion.x,
+                            y: spawner.postion.y,
+                            ..default()
+                        },
+                        ..default()
+                    },
+                    ..default()
+                },
+                PhysicsItem::new(spawner.postion, &mut id, radius),
+                Name::new("PhysItem"),
+            ));
+        }
+    }
 }

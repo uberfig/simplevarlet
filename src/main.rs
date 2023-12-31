@@ -56,8 +56,10 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     let mut camera = Camera2dBundle::default();
 
     camera.projection.scaling_mode = ScalingMode::AutoMin {
-        min_width: 256.0,
-        min_height: 144.0,
+        // min_width: 256.0,
+        // min_height: 144.0,
+        min_width: 512.0,
+        min_height: 288.0,
     };
 
     commands.spawn(camera);
