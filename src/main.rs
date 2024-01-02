@@ -30,6 +30,7 @@ fn main() {
                         title: "Ivy's secret project".into(),
                         resolution: (900.0, 506.0).into(),
                         resizable: true,
+                        canvas: Some("#game-canvas".into()),
                         ..default()
                     }),
                     ..default()
